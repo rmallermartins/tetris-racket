@@ -25,6 +25,7 @@
          lop-livres?
          fixa
          limpa
+         linha-completa?
          trata-tecla
          trata-tick
          desenha)
@@ -78,7 +79,7 @@
   (rectangle (* (tetris-largura jogo) Q-LARGURA)
              (* (tetris-altura jogo) Q-ALTURA)
              "solid"
-             "black"))
+             "green"))
 
 ;; Tetramino -> Lista(Posn)
 ;; Devolve a lista de posições que t ocupa no campo considerando a rotação e a
@@ -166,15 +167,31 @@
 ;; Requer que tetraminó não possa ser movido para baixo.
 (define (fixa jogo) jogo)
 
+
+
+
+
 ;; Jogo -> Jogo
 ;; Devolve um jogo sem as linhas que estão completas, isto é, as linhas que não
 ;; tem nenhum quadrado vazio. O jogo devolvido tem o mesmo tamanho do jogo de
 ;; entrada.
-(define (limpa jogo) jogo)
+(define (limpa jogo) 
+  (define campo (tetris-campo jogo))
+  
+  )
 
-;; -> Stream(Tetramino)
+;; Linha -> boolean
+;; Verifica se a linha está completa, se todos os elementos estão entre [1,7].
+;; Retorna True se esta completa, false caso contrario.
+
+(define (linha-completa? linha) 
+  (cond [(empty? linha) #t]
+        [(equal? (first linha) 0) #f]
+        [else (linha-completa? (rest linha))]))
+
+;; -> Stream(Tetraminstream racketo)
 ;; Cria um stream randômico de tetraminós.
 ;; Esta função não precisa de testes.
 ;; Você tem que implementar esta função, o corpo incial deve ser descartado.
 (define (stream-tetraminos)
-  (stream-cons T empty-stream))
+  (stream-cons (list-ref TETRAMINOS (add1 (random 7))) (stream-tetraminos)))
