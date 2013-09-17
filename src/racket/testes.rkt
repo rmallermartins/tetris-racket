@@ -164,6 +164,16 @@
    (check-equal? (limpa (tetris C1_FIXA_TT1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))
                  (tetris C1_FIXA_TT1_LIMPA C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))))
 
+(define linha-completa?-tests 
+  (test-suite 
+   "linha-completa? tests"
+   (check-equal? (linha-completa? '(0 1 2 3 4 5 6 7 5 6)) #f)
+   (check-equal? (linha-completa? '(1 1 2 3 4 5 5 6 6 0)) #f)
+   (check-equal? (linha-completa? '(5 5 5 5 5 5 5 5 5 5)) #t)
+   (check-equal? (linha-completa? '(5 6 4 6 0 0 0 7 6 4)) #f)
+   (check-equal? (linha-completa? '()) #t)
+   ))
+
 ;; ---------------------------------------------------------------------
 
 ;; Função que executa um grupo de testes.
@@ -180,4 +190,5 @@
                  lop-validas?-tests
                  lop-livres?-tests
                  fixa-tests
-                 limpa-tests)
+                 limpa-tests
+                 linha-completa?-tests)
