@@ -107,58 +107,19 @@
 ;;
 ;; Veja os testes para outros exemplos de como esta função deve funcionar.
 (define (tetramino->lista-pos t)
-  (define tetra-tipo (tetramino-tipo t))
-  (define tetra-rot (list-ref tetra-tipo (tetramino-rot t)))
-  (define tetra-pos (tetramino-pos t))
-  (percorre-lin tetra-rot tetra-pos 0 0))
-
-;; Tetramino-rot Tetramino-pos Int Int -> List(Posn)
-;; Percorre as linhas da rotação do tetra criando as Posn em cada coluna
-;; que achar 1, 
-(define (percorre-lin tetra-rot tetra-pos linha coluna)
-  (cond
-    [(empty? tetra-rot) empty]
-    [else
-     (append (percorre-col (first tetra-rot) tetra-pos linha coluna)
-             (percorre-lin (rest tetra-rot) tetra-pos (add1 linha) coluna))]))
-
-;; Tetramino-rot Tetramino-pos Int Int -> Posn
-;; Percorre as colunas da linha da rotação do tetra e cria um Posn caso ache 1
-(define (percorre-col tetra-rot-linha tetra-pos linha coluna)
-  (cond
-    [(empty? tetra-rot-linha) empty]
-    [else
-     (if (= (first tetra-rot-linha) 1)
-         (cons (posn (+ linha (posn-lin tetra-pos)) (+ coluna (posn-col tetra-pos)))
-               (percorre-col (rest tetra-rot-linha) tetra-pos linha (add1 coluna)))
-         (percorre-col (rest tetra-rot-linha) tetra-pos linha (add1 coluna)))]))
+  empty)
 
 ;; Lista(Posn) Natural Natural -> Boolean
-;; Devolve verdadeiro se todas as posições de lp são válidas, isto é, estão
+;; Devolve verdadeiro se todas os posições de lp são válidas, isto é, estão
 ;; dentro de um campo de tamanho largura x altura. Devolve falso caso
 ;; contrário.
-(define (lop-validas? lp largura altura)
-  (cond
-    [(empty? lp) #t]
-    [else
-     (and
-      (and
-       (and (< (posn-lin (first lp)) altura) (>= (posn-lin (first lp)) 0))
-       (and (< (posn-col (first lp)) largura) (>= (posn-col (first lp)) 0)))
-      (lop-validas? (rest lp) largura altura))]))
+(define (lop-validas? lp largura altura) false)
 
 ;; Lista(Posn) Campo -> Boolean
 ;; Devolve verdadeiro se todas as posição de lp estão livres no campo. Devolve
 ;; falso caso contrário.
 ;; Requer que todas as posições em lp sejam válidas.
-(define (lop-livres? lp campo)
-  (cond
-    [(empty? lp) #t]
-    [else
-     (and
-      (= (list-ref (list-ref campo (posn-lin (first lp))) (posn-col (first lp))) 0)
-      (lop-livres? (rest lp) campo))]))
-
+(define (lop-livres? lp campo) false)
 
 ;; Jogo -> Jogo
 ;; Preenche as posições ocupadas pelo tetraminó (que está caindo) no campo do
