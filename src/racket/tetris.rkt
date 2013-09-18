@@ -88,7 +88,7 @@
 ;; Por exemplo, seja TT1 definido como
 ;; (define TT1 (tetramino T_TIPOS 1 (posn 1 0) T_COR))
 ;; este tetraminó está na rotação 1 e na posição (posn 1 0). O elemento na
-;; posição 1 de T_TIPOS é T1 que é a seguinte lista de listas (definina em
+;; posição 1 de T_TIPOS é T1 que é a seguinte lista de listas (definida em
 ;; tetra-tipos.rkt)
 ;;    0 1 2     ; colunas
 ;;              ; linhas
@@ -101,7 +101,7 @@
 ;; as posições em relação a (posn 0 0), mas o tetraminó está na posição
 ;; (posn 1 0), desta forma, precisamos fazer a translação das posições. Para
 ;; isto, somamos o ponto (posn 1 0) a cada ponto de T1, o que resulta em
-;; (pos 1 1) (posn 2 0) (posn 2 2) (posn 3 1). Observe que é posível ter
+;; (pos 1 1) (posn 2 1) (posn 2 2) (posn 3 1). Observe que é posível ter
 ;; um deslocamento em relação a origem negativa. Por exemplo, se a posição de
 ;; TT1 fosse (posn 0 -1), obteríamos como resposta da função a lista com
 ;; as posições (posn 0 0) (posn 1 0) (pos 1 1) (pos 2 0).
@@ -176,13 +176,29 @@
 ;; tem nenhum quadrado vazio. O jogo devolvido tem o mesmo tamanho do jogo de
 ;; entrada.
 (define (limpa jogo) 
-  (define campo (tetris-campo jogo))
   
-  )
+(struct-copy tetris jogo 
+             [campo (limpa-campo
+                     (tetris-campo jogo) 
+                     (tetris-altura jogo) 
+                     (tetris-largura jogo))]))
+  
+(define (limpa-campo campo altura largura)
+  (define campo-parcial (filter not-linha-completa? campo))
+  
+  (define (completa-campo n) 
+    (cond [(equal? n 0) campo-parcial]
+          [else (cons (make-linha largura) 
+                      (completa-campo (sub1 n)))]))
+  
+  (completa-campo (- altura (length campo-parcial))))
 
 ;; Linha -> boolean
-;; Verifica se a linha está completa, se todos os elementos estão entre [1,7].
+;; Verifica se a linha está completa (elementos diferentes de 0).
 ;; Retorna True se esta completa, false caso contrario.
+
+(define (not-linha-completa? linha)
+  (not (linha-completa? linha)))
 
 (define (linha-completa? linha) 
   (cond [(empty? linha) #t]
