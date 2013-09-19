@@ -158,6 +158,37 @@
    (check-equal? (fixa (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))
                  (tetris C1_FIXA_TT1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))))
 
+(define fixa-linha-tests
+  (test-suite
+   "fixa-linha tests"
+   (check-equal? (fixa-linha (list) 7 (list 0 0 0 0 1 3 6 4 5 2)) 
+                 (list 0 0 0 0 1 3 6 4 5 2))
+   (check-equal? (fixa-linha (list 1 2 3) 7 (list 0 0 0 0 1 3 6 4 5 2)) 
+                 (list 0 7 7 7 1 3 6 4 5 2))
+   (check-equal? (fixa-linha (list 0 1) 7 (list 0 0 0 0 1 3 6 4 5 2)) 
+                 (list 7 7 0 0 1 3 6 4 5 2))))
+
+(define contem-tests 
+  (test-suite 
+   "contem-tests"
+   (check-equal? (contem 1 (list 1 3 5 9)) #t)
+   (check-equal? (contem 9 (list 1 3 5 9)) #t)
+   (check-equal? (contem 5 (list 1 3 5 0 9)) #t)
+   (check-equal? (contem 1 (list)) #f)
+   (check-equal? (contem 2 (list 1 3 5 9)) #f)))
+
+(define get-cols-tests 
+  (test-suite 
+   "get-cols-tests"
+   (check-equal? (get-cols (list (posn 0 2) (posn 0 3) (posn 1 5) (posn 1 2) (posn 1 3) (posn 2 3)) 1)
+                 (list 5 2 3))
+   (check-equal? (get-cols (list (posn 0 2) (posn 0 3) (posn 1 5) (posn 1 2) (posn 1 3) (posn 2 3)) 0)
+                 (list 2 3))
+   (check-equal? (get-cols (list (posn 0 2) (posn 0 3) (posn 1 5) (posn 1 2) (posn 1 3) (posn 2 3)) 2)
+                 (list 3))
+   (check-equal? (get-cols (list) 1)
+                 (list))))
+
 (define limpa-tests
   (test-suite
    "limpa tests"
@@ -190,5 +221,8 @@
                  lop-validas?-tests
                  lop-livres?-tests
                  fixa-tests
+                 fixa-linha-tests
+                 contem-tests
+                 get-cols-tests
                  limpa-tests
                  linha-completa?-tests)

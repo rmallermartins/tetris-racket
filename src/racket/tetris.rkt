@@ -24,6 +24,9 @@
          lop-validas?
          lop-livres?
          fixa
+         fixa-linha
+         contem
+         get-cols
          limpa
          linha-completa?
          trata-tecla
@@ -165,26 +168,67 @@
 ;; Preenche as posições ocupadas pelo tetraminó (que está caindo) no campo do
 ;; jogo.
 ;; Requer que tetraminó não possa ser movido para baixo.
-(define (fixa jogo) jogo)
 
+(define (fixa jogo) 
+ (struct-copy tetris jogo [campo (fixa-tetramino (tetris-tetra jogo) (tetris-campo jogo))]))
 
+(define (fixa-tetramino tetramino campo) 
+  
+  (define posicoes (tetramino->lista-pos tetramino))
+  (define cor (tetramino-cor tetramino))
+  
+  (define (laço i lst)
+  (cond [(empty? lst) empty]
+        [else (cons (fixa-linha (get-cols posicoes i) cor (first lst) ) 
+                    (laço (add1 i) (rest lst)))]))
+  (laço 0 campo)
+         
+)
 
+;; cols, cor e linha -> linha
+;; recebe a colunas a serem marcadas na linha pela cor indicada     
+(define (fixa-linha cols cor linha)
+  
+  (define (laço i lst)
+  (cond [(empty? lst) empty]
+        [(contem i cols)
+         (cons cor (laço (add1 i) (rest lst)))]
+        [else 
+         (cons (first lst) (laço (add1 i) (rest lst)))]))
+  (cond [(empty? cols) linha]
+        [else (laço 0 linha)])
+  )
 
+;; elemento, lista -> boolean
+;; verifica se o elemento esta na lista 
+;; verdadeiro se achar, falso do contrario
+
+(define (contem elem lista)
+  (cond [(equal? (member elem lista) #f) #f]
+        [else #t]))
+
+;; Lista de posn e n-linha -> lista de col
+;; Devolve uma lista de colunas que fazem par com a linha informada
+
+(define (get-cols posicoes n)
+  (cond [(empty? posicoes) empty]
+        [(= (posn-lin (first posicoes)) n) 
+         (cons (posn-col (first posicoes))
+               (get-cols (rest posicoes) n))]
+        [else (get-cols (rest posicoes) n)]))
 
 ;; Jogo -> Jogo
 ;; Devolve um jogo sem as linhas que estão completas, isto é, as linhas que não
 ;; tem nenhum quadrado vazio. O jogo devolvido tem o mesmo tamanho do jogo de
 ;; entrada.
 (define (limpa jogo) 
-  
-(struct-copy tetris jogo 
-             [campo (limpa-campo
-                     (tetris-campo jogo) 
-                     (tetris-altura jogo) 
-                     (tetris-largura jogo))]))
+  (struct-copy tetris jogo [campo (limpa-campo
+                                 (tetris-campo jogo)
+                                 (tetris-altura jogo)
+                                 (tetris-largura jogo))]))
   
 (define (limpa-campo campo altura largura)
-  (define campo-parcial (filter not-linha-completa? campo))
+  (define campo-parcial (filter-not linha-completa? campo))
   
   (define (completa-campo n) 
     (cond [(equal? n 0) campo-parcial]
@@ -196,9 +240,6 @@
 ;; Linha -> boolean
 ;; Verifica se a linha está completa (elementos diferentes de 0).
 ;; Retorna True se esta completa, false caso contrario.
-
-(define (not-linha-completa? linha)
-  (not (linha-completa? linha)))
 
 (define (linha-completa? linha) 
   (cond [(empty? linha) #t]
