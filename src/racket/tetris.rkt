@@ -30,6 +30,13 @@
          limpa
          linha-completa?
          trata-tecla
+         move-direita
+         move-esquerda
+         rotaciona
+         move-baixo
+         fixa-se-colidiu
+         move-se-nao-colidiu
+         colidiu?
          trata-tick
          desenha)
 
@@ -61,7 +68,94 @@
 ;; e "down".
 (define (trata-tecla jogo tecla)
   (printf "\ntrata-tecla:~a\n" tecla)
-  jogo)
+  (cond
+    [(key=? tecla "right") (move-direita jogo)]
+    [(key=? tecla "left") (move-esquerda jogo)]
+    [(key=? tecla "up") (rotaciona jogo)]
+    [(key=? tecla "down") (move-baixo jogo)]))
+
+;; Jogo -> Jogo
+;; Está função é chamada quando a tecla pressionada for "right".
+;; Move o tetraminó que está caindo para a direita, checa se não ouve colisão.
+;; Retornando o mesmo jogo caso tenha, e um novo jogo caso não tenha.
+(define (move-direita jogo)
+  (define tetra (tetris-tetra jogo))
+  (define tetra-pos (tetramino-pos tetra))
+  (define tetra-pos-mov-direita (struct-copy posn tetra-pos [col (add1 (posn-col tetra-pos))]))
+  (define tetra-mov-direita (struct-copy tetramino tetra [pos tetra-pos-mov-direita]))
+  (define jogo-novo (struct-copy tetris jogo [tetra tetra-mov-direita]))
+  (move-se-nao-colidiu jogo-novo jogo))
+
+;; Jogo -> Jogo
+;; Está função é chamada quando a tecla pressionada for "left".
+;; Move o tetraminó que está caindo para a direita, checa se não ouve colisão.
+;; Retornando o mesmo jogo caso tenha, e um novo jogo caso não tenha.
+(define (move-esquerda jogo)
+  (define tetra (tetris-tetra jogo))
+  (define tetra-pos (tetramino-pos tetra))
+  (define tetra-pos-mov-esquerda (struct-copy posn tetra-pos [col (sub1 (posn-col tetra-pos))]))
+  (define tetra-mov-esquerda (struct-copy tetramino tetra [pos tetra-pos-mov-esquerda]))
+  (define jogo-novo (struct-copy tetris jogo [tetra tetra-mov-esquerda]))
+  (move-se-nao-colidiu jogo-novo jogo))
+
+;; Jogo -> Jogo
+;; Está função é chamada quando a tecla pressionada for "up".
+;; Muda a rotação do tetraminó que está caindo.
+;; Retorna o novo jogo com o tetraminó rotacionado.
+(define (rotaciona jogo)
+  (define tetra (tetris-tetra jogo))
+  (define tetra-rot (tetramino-rot tetra))
+  (define tetra-tipo (tetramino-tipo tetra))
+  (define tipo-tam (length (tetra-tipo)))
+  (define (cria-novo-tetra nova-rot)
+    (struct-copy tetramino tetra [pos nova-rot]))
+  (define (cria-novo-jogo novo-tetra)
+    (struct-copy tetris jogo [tetra novo-tetra]))
+  (move-se-nao-colidiu (cond
+                         [(= tetra-rot (sub1 tipo-tam)) (cria-novo-jogo (cria-novo-tetra 0))]
+                         [else (cria-novo-jogo (cria-novo-tetra (add1 tetra-rot)))])
+                       jogo))
+
+;; Jogo -> Jogo
+;; Está função é chamada se a tecla pressionada for "down".
+;; Move o tetraminó que está caindo para baixo, checa se não ouve colisão.
+;; Retornando o mesmo jogo caso tenha, e o novo jogo caso contrario.
+(define (move-baixo jogo)
+  (define tetra (tetris-tetra jogo))
+  (define tetra-pos (tetramino-pos tetra))
+  (define tetra-pos-mov-baixo (struct-copy posn tetra-pos [lin (add1 (posn-lin tetra-pos))]))
+  (define tetra-mov-baixo (struct-copy tetramino tetra [pos tetra-pos-mov-baixo]))
+  (define jogo-novo (struct-copy tetris jogo [tetra tetra-mov-baixo]))
+  (fixa-se-colidiu jogo-novo jogo))
+  
+;; Jogo Jogo -> Jogo
+;; Está função retorna o jogo com a peça fixada sem se mover caso no novo jogo 
+;; tenha ocorrido colisão, caso contrario retorna o novo jogo.
+(define (fixa-se-colidiu jogo-novo jogo)
+  (cond
+    [(colidiu? jogo-novo) (manda-prox-tetra (fixa jogo))]
+    [else jogo-novo]))
+
+;; Jogo Jogo -> Jogo
+;; Está função retorna o jogo com a peça movida caso não tenha ocorrido colisão
+;; no novo jogo ou retorna o jogo antigo caso contrario.
+(define (move-se-nao-colidiu jogo-novo jogo)
+  (cond
+    [(colidiu? jogo-novo) jogo]
+    [else jogo-novo]))
+
+;; Jogo -> Boolean
+;; Verifica se após o movimento o tetraminó não saiu do campo ou
+;; colidiu com uma parte ja fixada no campo e retorna #t caso um dos dois ocorreu
+;; e #f caso contratrio
+(define (colidiu? jogo)
+  (define tetra (tetris-tetra jogo))
+  (define altura (tetris-altura jogo))
+  (define largura (tetris-largura jogo))
+  (not
+   (and
+    (lop-validas? (tetramino->lista-pos tetra) largura altura)
+    (lop-livres? (tetramino->lista-pos tetra) (tetris-campo jogo)))))
 
 ;; Jogo -> Jogo
 ;; Função que trata um tick. Esta função é chamada 28 vezes por segundo, ela
@@ -163,14 +257,12 @@
       (= (list-ref (list-ref campo (posn-lin (first lp))) (posn-col (first lp))) 0)
       (lop-livres? (rest lp) campo))]))
 
-
 ;; Jogo -> Jogo
 ;; Preenche as posições ocupadas pelo tetraminó (que está caindo) no campo do
 ;; jogo.
 ;; Requer que tetraminó não possa ser movido para baixo.
-
 (define (fixa jogo) 
- (struct-copy tetris jogo [campo (fixa-tetramino (tetris-tetra jogo) (tetris-campo jogo))]))
+  (struct-copy tetris jogo [campo (fixa-tetramino (tetris-tetra jogo) (tetris-campo jogo))]))
 
 (define (fixa-tetramino tetramino campo) 
   
@@ -178,38 +270,33 @@
   (define cor (tetramino-cor tetramino))
   
   (define (laço i lst)
-  (cond [(empty? lst) empty]
-        [else (cons (fixa-linha (get-cols posicoes i) cor (first lst) ) 
-                    (laço (add1 i) (rest lst)))]))
-  (laço 0 campo)
-         
-)
+    (cond [(empty? lst) empty]
+          [else (cons (fixa-linha (get-cols posicoes i) cor (first lst) ) 
+                      (laço (add1 i) (rest lst)))]))
+  (laço 0 campo))
 
 ;; cols, cor e linha -> linha
 ;; recebe a colunas a serem marcadas na linha pela cor indicada     
 (define (fixa-linha cols cor linha)
   
   (define (laço i lst)
-  (cond [(empty? lst) empty]
-        [(contem i cols)
-         (cons cor (laço (add1 i) (rest lst)))]
-        [else 
-         (cons (first lst) (laço (add1 i) (rest lst)))]))
+    (cond [(empty? lst) empty]
+          [(contem i cols)
+           (cons cor (laço (add1 i) (rest lst)))]
+          [else 
+           (cons (first lst) (laço (add1 i) (rest lst)))]))
   (cond [(empty? cols) linha]
-        [else (laço 0 linha)])
-  )
+        [else (laço 0 linha)]))
 
 ;; elemento, lista -> boolean
 ;; verifica se o elemento esta na lista 
 ;; verdadeiro se achar, falso do contrario
-
 (define (contem elem lista)
   (cond [(equal? (member elem lista) #f) #f]
         [else #t]))
 
 ;; Lista de posn e n-linha -> lista de col
 ;; Devolve uma lista de colunas que fazem par com a linha informada
-
 (define (get-cols posicoes n)
   (cond [(empty? posicoes) empty]
         [(= (posn-lin (first posicoes)) n) 
@@ -223,10 +310,10 @@
 ;; entrada.
 (define (limpa jogo) 
   (struct-copy tetris jogo [campo (limpa-campo
-                                 (tetris-campo jogo)
-                                 (tetris-altura jogo)
-                                 (tetris-largura jogo))]))
-  
+                                   (tetris-campo jogo)
+                                   (tetris-altura jogo)
+                                   (tetris-largura jogo))]))
+
 (define (limpa-campo campo altura largura)
   (define campo-parcial (filter-not linha-completa? campo))
   
@@ -240,7 +327,6 @@
 ;; Linha -> boolean
 ;; Verifica se a linha está completa (elementos diferentes de 0).
 ;; Retorna True se esta completa, false caso contrario.
-
 (define (linha-completa? linha) 
   (cond [(empty? linha) #t]
         [(equal? (first linha) 0) #f]
@@ -252,3 +338,12 @@
 ;; Você tem que implementar esta função, o corpo incial deve ser descartado.
 (define (stream-tetraminos)
   (stream-cons (list-ref TETRAMINOS (add1 (random 7))) (stream-tetraminos)))
+
+;; Jogo -> Jogo
+;; Está função é chamada quando o tetra que está caindo é fixado e outro precisa
+;; começar a cair.
+(define (manda-prox-tetra jogo)
+  (define lista-prox (tetris-proximos jogo))
+  (struct-copy tetris jogo 
+               [tetra (centraliza (stream-first lista-prox) LARGURA-PADRAO)]
+               [proximos (stream-rest lista-prox)]))
