@@ -108,7 +108,7 @@
   (test-suite
    "trata-tecla tests"
    (check-equal? (trata-tecla (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT) "right")
-                 (tetris C1 C1_LARGURA C1_ALTURA TT1_MOVE_DIREITA empty TIMEOUT))))
+                 (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))))
 
 (define move-se-nao-colidiu-tests
   (test-suite
@@ -118,7 +118,7 @@
                  (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))
    (check-equal? (move-se-nao-colidiu (tetris C1 C1_LARGURA C1_ALTURA TT1_MOVE_DIREITA empty TIMEOUT)
                                       (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))
-                 (tetris C1 C1_LARGURA C1_ALTURA TT1_MOVE_DIREITA empty TIMEOUT))))
+                 (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))))
 
 (define colidiu?-tests
   (test-suite
@@ -128,7 +128,7 @@
    (check-equal? (colidiu? (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))
                  #f)
    (check-equal? (colidiu? (tetris C1 C1_LARGURA C1_ALTURA TT1_MOVE_DIREITA empty TIMEOUT))
-                 #f)))
+                 #t)))
 
 (define tetramino->pos-tests
   (test-suite
