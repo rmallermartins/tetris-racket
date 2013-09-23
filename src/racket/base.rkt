@@ -23,6 +23,7 @@
          TIMEOUT-PADRAO
          Q-ALTURA Q-LARGURA
          TIMEOUT-PADRAO
+         BORDA-QUADRADO
          BLANK
          CORES
          I_COR J_COR L_COR O_COR S_COR T_COR Z_COR
@@ -140,6 +141,9 @@
 
 ;; Altura de um quadrado em pixels
 (define Q-ALTURA 20)
+
+;; Borda de um quadrado
+(define BORDA-QUADRADO (rectangle Q-LARGURA Q-ALTURA "outline" "white"))
 
 ;; Uma imagem vazia, para ser usada como elemento neutro nas operações com
 ;; imagens

@@ -9,9 +9,24 @@
 ;; Constantes usadas nos testes
 (define TIMEOUT 14)
 
+(define TS0 (tetramino S_TIPOS 0 (posn 0 3) S_COR))
+(define TS0_ROT (tetramino S_TIPOS 1 (posn 0 3) S_COR))
+
+(define TO0 (tetramino O_TIPOS 0 (posn 0 1) O_COR))
+(define TO0_MOVE_DIREITA (tetramino O_TIPOS 0 (posn 0 2) O_COR))
+(define TO0_MOVE_ESQUERDA (tetramino O_TIPOS 0 (posn 0 0) O_COR))
+
+(define TO0_CANTO_DIREITO (tetramino O_TIPOS 0 (posn 0 5) O_COR))
+(define TO0_CANTO_DIREITO_BAIXO (tetramino O_TIPOS 0 (posn 1 5) O_COR))
+(define TO0_CANTO_ESQUERDO (tetramino O_TIPOS 0 (posn 0 0) O_COR))
+(define TO0_MOVE_DIREITA_COLIDE (tetramino O_TIPOS 0 (posn 0 6) O_COR))
+(define TO0_MOVE_ESQUERDA_COLIDE (tetramino O_TIPOS 0 (posn 0 -1) O_COR))
+
+(define TO0_CANTO_ESQUERDO_FIXADA (tetramino O_TIPOS 0 (posn 1 1) O_COR))
+(define TO0_MOVE_ESQUERDA_COLIDE_FIXADA (tetramino O_TIPOS 0 (posn 1 0) O_COR))
+
+
 (define TT1 (tetramino T_TIPOS 1 (posn 1 0) T_COR))
-(define TT1_MOVE_DIREITA (tetramino T_TIPOS 1 (posn 1 (add1 0)) T_COR))
-(define TT1_COLIDIU (tetramino T_TIPOS 1 (posn 1 10) T_COR))
 (define TT1_POS (list (posn 1 1)
                       (posn 2 1) (posn 2 2)
                       (posn 3 1)))
@@ -32,7 +47,15 @@
                  (list 4 0 2 4 6 1 1)   ; 3
                  (list 3 4 0 0 0 0 0)   ; 4
                  (list 1 2 4 3 2 5 6))) ; 5
-;     0 1 2 3 4 5 6
+                 ;     0 1 2 3 4 5 6
+
+(define C1_FIXA_TO0 (list (list 0 0 0 0 0 0 0)   ; 0
+                          (list 0 0 0 0 0 4 4)   ; 1
+                          (list 6 0 0 0 0 4 4)   ; 2
+                          (list 4 0 2 4 6 1 1)   ; 3
+                          (list 3 4 0 0 0 0 0)   ; 4
+                          (list 1 2 4 3 2 5 6))) ; 5
+                          ;     0 1 2 3 4 5 6
 
 (define C1_LARGURA 7)
 (define C1_ALTURA 6)
@@ -107,27 +130,60 @@
 (define trata-tecla-tests
   (test-suite
    "trata-tecla tests"
-   (check-equal? (trata-tecla (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT) "right")
-                 (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))))
+   (check-equal? (trata-tecla (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_DIREITO empty TIMEOUT) "right")
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_DIREITO empty TIMEOUT))
+   (check-equal? (trata-tecla (tetris C1 C1_LARGURA C1_ALTURA TO0 empty TIMEOUT) "right")
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_DIREITA empty TIMEOUT))
+   (check-equal? (trata-tecla (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_ESQUERDO empty TIMEOUT) "left")
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_ESQUERDO empty TIMEOUT))
+   (check-equal? (trata-tecla (tetris C1 C1_LARGURA C1_ALTURA TO0 empty TIMEOUT) "left")
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_ESQUERDA empty TIMEOUT))
+   (check-equal? (trata-tecla (tetris C1 C1_LARGURA C1_ALTURA TO0 empty TIMEOUT) "left")
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_ESQUERDA empty TIMEOUT))
+   (check-equal? (trata-tecla (tetris C1 C1_LARGURA C1_ALTURA TS0 empty TIMEOUT) "up")
+                 (tetris C1 C1_LARGURA C1_ALTURA TS0_ROT empty TIMEOUT))))
+
+(define move-direita-tests
+  (test-suite
+   "move-direita tests"
+   (check-equal? (move-direita (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_DIREITO empty TIMEOUT))
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_DIREITO empty TIMEOUT))
+   (check-equal? (move-direita (tetris C1 C1_LARGURA C1_ALTURA TO0 empty TIMEOUT))
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_DIREITA empty TIMEOUT))))
+
+(define move-esquerda-tests
+  (test-suite
+   "move-esqeurda tests"
+   (check-equal? (move-esquerda (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_ESQUERDO empty TIMEOUT))
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_ESQUERDO empty TIMEOUT))
+   (check-equal? (move-esquerda (tetris C1 C1_LARGURA C1_ALTURA TO0 empty TIMEOUT))
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_ESQUERDA empty TIMEOUT))))
+
+(define move-baixo-tests
+  (test-suite
+   "move-baixo tests"
+   (check-equal? (move-baixo (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_DIREITO empty TIMEOUT))
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_DIREITO_BAIXO empty TIMEOUT))))
 
 (define move-se-nao-colidiu-tests
   (test-suite
    "move-se-nao-colidiu tests"
-   (check-equal? (move-se-nao-colidiu (tetris C1 C1_LARGURA C1_ALTURA TT1_COLIDIU empty TIMEOUT)
-                                      (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))
-                 (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))
-   (check-equal? (move-se-nao-colidiu (tetris C1 C1_LARGURA C1_ALTURA TT1_MOVE_DIREITA empty TIMEOUT)
-                                      (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))
-                 (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))))
+   (check-equal? (move-se-nao-colidiu (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_DIREITA_COLIDE empty TIMEOUT)
+                                      (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_DIREITO empty TIMEOUT))
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_DIREITO empty TIMEOUT))
+   (check-equal? (move-se-nao-colidiu (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_ESQUERDA_COLIDE empty TIMEOUT)
+                                      (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_ESQUERDO empty TIMEOUT))
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_ESQUERDO empty TIMEOUT))
+   (check-equal? (move-se-nao-colidiu (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_DIREITA empty TIMEOUT)
+                                      (tetris C1 C1_LARGURA C1_ALTURA TO0 empty TIMEOUT))
+                 (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_DIREITA empty TIMEOUT))))
 
 (define colidiu?-tests
   (test-suite
    "colidiu? tests"
-   (check-equal? (colidiu? (tetris C1 C1_LARGURA C1_ALTURA TT1_COLIDIU empty TIMEOUT))
-                 #t)
-   (check-equal? (colidiu? (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))
+   (check-equal? (colidiu? (tetris C1 C1_LARGURA C1_ALTURA TO0 empty TIMEOUT))
                  #f)
-   (check-equal? (colidiu? (tetris C1 C1_LARGURA C1_ALTURA TT1_MOVE_DIREITA empty TIMEOUT))
+   (check-equal? (colidiu? (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_DIREITA_COLIDE empty TIMEOUT))
                  #t)))
 
 (define tetramino->pos-tests
@@ -184,7 +240,9 @@
   (test-suite
    "fixa tests"
    (check-equal? (fixa (tetris C1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))
-                 (tetris C1_FIXA_TT1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))))
+                 (tetris C1_FIXA_TT1 C1_LARGURA C1_ALTURA TT1 empty TIMEOUT))
+   (check-equal? (fixa (tetris C1 C1_LARGURA C1_ALTURA TO0_CANTO_DIREITO_BAIXO empty TIMEOUT))
+                 (tetris C1_FIXA_TO0 C1_LARGURA C1_ALTURA TO0_CANTO_DIREITO_BAIXO empty TIMEOUT))))
 
 (define fixa-linha-tests
   (test-suite
@@ -246,6 +304,9 @@
                  centraliza-tests
                  make-tetris-tests
                  trata-tecla-tests
+                 move-direita-tests
+                 move-esquerda-tests
+                 move-baixo-tests
                  move-se-nao-colidiu-tests
                  colidiu?-tests
                  tetramino->pos-tests

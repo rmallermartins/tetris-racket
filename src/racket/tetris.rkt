@@ -38,7 +38,15 @@
          move-se-nao-colidiu
          colidiu?
          trata-tick
-         desenha)
+         game-over?
+         desenha
+         desenha-tetra
+         desenha-lop-tetra
+         desenha-campo
+         desenha-linha
+         desenha-bloco
+         stream-tetraminos
+         manda-prox-tetra)
 
 ;; -> Tetris
 ;; Cria o jogo inicial.
@@ -82,10 +90,8 @@
   (define tetra (tetris-tetra jogo))
   (define tetra-pos (tetramino-pos tetra))
   (define tetra-pos-mov-direita (struct-copy posn tetra-pos [col (add1 (posn-col tetra-pos))]))
-  ;(printf "\nDIREITA:~a\n" tetra-pos-mov-direita)
   (define tetra-mov-direita (struct-copy tetramino tetra [pos tetra-pos-mov-direita]))
   (define jogo-novo (struct-copy tetris jogo [tetra tetra-mov-direita]))
- ;  (printf "\nDIREITA:~a\n" (tetramino-pos (tetris-tetra jogo-novo)))
   (move-se-nao-colidiu jogo-novo jogo))
 
 ;; Jogo -> Jogo
@@ -108,9 +114,9 @@
   (define tetra (tetris-tetra jogo))
   (define tetra-rot (tetramino-rot tetra))
   (define tetra-tipo (tetramino-tipo tetra))
-  (define tipo-tam (length (tetra-tipo)))
+  (define tipo-tam (length (tetramino-tipo tetra)))
   (define (cria-novo-tetra nova-rot)
-    (struct-copy tetramino tetra [pos nova-rot]))
+    (struct-copy tetramino tetra [rot nova-rot]))
   (define (cria-novo-jogo novo-tetra)
     (struct-copy tetris jogo [tetra novo-tetra]))
   (move-se-nao-colidiu (cond
@@ -129,7 +135,7 @@
   (define tetra-mov-baixo (struct-copy tetramino tetra [pos tetra-pos-mov-baixo]))
   (define jogo-novo (struct-copy tetris jogo [tetra tetra-mov-baixo]))
   (fixa-se-colidiu jogo-novo jogo))
-  
+
 ;; Jogo Jogo -> Jogo
 ;; Está função retorna o jogo com a peça fixada sem se mover caso no novo jogo 
 ;; tenha ocorrido colisão, caso contrario retorna o novo jogo.
@@ -164,7 +170,20 @@
 ;; tetraminó, a contagem deve reiniciar.
 (define (trata-tick jogo)
   (printf "t")
-  jogo)
+  (define timeout-jogo (tetris-timeout jogo))
+  (define jogo-timeout-resetado-limpo (limpa (struct-copy tetris jogo [timeout TIMEOUT-PADRAO])))
+  (cond
+    [(game-over? jogo) (error "Game Over")]
+    [else
+     (if (= timeout-jogo 0)
+         (move-baixo jogo-timeout-resetado-limpo)
+         (struct-copy tetris jogo [timeout (sub1 timeout-jogo)]))]))
+
+(define (game-over? jogo)
+  (define lop-tetra (tetramino->lista-pos (tetris-tetra jogo)))
+  (cond
+    [(colidiu? jogo) #t]
+    [else #f]))
 
 ;; Tetris -> Imagem
 ;; Esta função é chamada quando o jogo precisa ser desenhado na tela. Devolve
@@ -173,11 +192,72 @@
 ;; 2htdp/image.
 (define (desenha jogo)
   (printf "d")
-  (rectangle (* (tetris-largura jogo) Q-LARGURA)
-             (* (tetris-altura jogo) Q-ALTURA)
-             "solid"
-             "green"))
+  (define tetra (tetris-tetra jogo))
+  (define tetra-pos (tetramino-pos tetra))
+  (overlay/align
+   "left" "top"
+   (desenha-tetra tetra)
+   (desenha-campo (tetris-campo jogo))))
 
+;; Tetra -> Imagem
+;; Está função é chamada dentro da função desenha, ela devolve a imagem correspondente
+;; ao tetramino do jogo que está caindo.
+(define (desenha-tetra tetra)
+  (define lop-tetra (tetramino->lista-pos tetra))
+  (define cor-tetra (tetramino-cor tetra))
+  (cond
+    [(empty? tetra) BLANK]
+    [else
+     (desenha-lop-tetra lop-tetra cor-tetra)]))
+
+;; List -> Imagem
+;; Está função é chamada dentro da função desenha-tetar, ela devolve a imagem
+;; correspondente as posições da lista.
+(define (desenha-lop-tetra lop-tetra cor-tetra)
+  (cond
+    [(empty? lop-tetra) BLANK]
+    [else
+     (overlay/xy
+      (overlay BORDA-QUADRADO
+               (rectangle Q-LARGURA Q-ALTURA "solid" (list-ref CORES cor-tetra)))
+      (- (* (posn-col (first lop-tetra)) Q-LARGURA))
+      (- (* (posn-lin (first lop-tetra)) Q-ALTURA))
+      (desenha-lop-tetra (rest lop-tetra) cor-tetra))]))
+
+;; Campo -> Imagem
+;; Está função é chamada dentro da função desenha, ela devolve a imagem correpondente
+;; ao campo do jogo.
+(define (desenha-campo campo)
+  (cond
+    [(empty? campo) BLANK]
+    [else 
+     (above (desenha-linha (first campo))
+            (desenha-campo (rest campo)))]))
+
+;; Linha -> Imagem
+;; Está função é chamada dentro da função desenha-campo, ela devolve a imagem
+;; correspondente a uma linha do campo.
+(define (desenha-linha linha)
+  (cond
+    [(empty? linha) BLANK]
+    [else
+     (beside (desenha-bloco (first linha))
+             (desenha-linha (rest linha)))]))
+
+;; Integer -> Imagem
+;; Está função é chamda dentro da função desenha-linha, ela devolve a imagem
+;; correspondente a um bloco da linha.
+(define (desenha-bloco bloco)
+  (define desenho-bloco (rectangle Q-LARGURA Q-ALTURA "solid" (list-ref CORES bloco)))
+  (cond
+    [(= bloco 0) desenho-bloco]
+    [else
+     (overlay BORDA-QUADRADO desenho-bloco)]))
+
+(define (desenha-tela-gameover)
+  (overlay (text "GAME OVER" 50 "RED")
+           (rectangle (* Q-LARGURA LARGURA-PADRAO) (* Q-ALTURA ALTURA-PADRAO) "solid" "black")))
+  
 ;; Tetramino -> Lista(Posn)
 ;; Devolve a lista de posições que t ocupa no campo considerando a rotação e a
 ;; posição (translação em relação a origem).
@@ -227,7 +307,7 @@
     [(empty? tetra-rot-linha) empty]
     [ (= (first tetra-rot-linha) 1)
       (cons (posn (+ linha (posn-lin tetra-pos)) (+ coluna (posn-col tetra-pos)))
-               (percorre-col (rest tetra-rot-linha) tetra-pos linha (add1 coluna)))]
+            (percorre-col (rest tetra-rot-linha) tetra-pos linha (add1 coluna)))]
     [else (percorre-col (rest tetra-rot-linha) tetra-pos linha (add1 coluna))]))
 
 ;; Lista(Posn) Natural Natural -> Boolean
@@ -252,7 +332,7 @@
   (cond
     [(empty? lp) #t]
     [else (and (= (list-ref (list-ref campo (posn-lin (first lp))) 
-                       (posn-col (first lp))) 0)
+                            (posn-col (first lp))) 0)
                (lop-livres? (rest lp) campo))]))
 
 ;; Jogo -> Jogo
@@ -260,7 +340,7 @@
 ;; jogo.
 ;; Requer que tetraminó não possa ser movido para baixo.
 (define (fixa jogo)
-  (struct-copy tetris jogo [campo (fixa-tetramino (tetris-tetra jogo) (tetris-campo jogo))]))
+  (struct-copy tetris jogo [campo (fixa-tetramino (tetris-tetra jogo) (tetris-campo jogo))] [timeout TIMEOUT-PADRAO]))
 
 (define (fixa-tetramino tetramino campo) 
   
@@ -336,7 +416,7 @@
 ;; Esta função não precisa de testes.
 ;; Você tem que implementar esta função, o corpo incial deve ser descartado.
 (define (stream-tetraminos)
-  (stream-cons (list-ref TETRAMINOS (add1 (random 7))) (stream-tetraminos)))
+  (stream-cons (list-ref TETRAMINOS (random 7)) (stream-tetraminos)))
 
 ;; Jogo -> Jogo
 ;; Está função é chamada quando o tetra que está caindo é fixado e outro precisa
