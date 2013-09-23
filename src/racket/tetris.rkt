@@ -82,8 +82,10 @@
   (define tetra (tetris-tetra jogo))
   (define tetra-pos (tetramino-pos tetra))
   (define tetra-pos-mov-direita (struct-copy posn tetra-pos [col (add1 (posn-col tetra-pos))]))
+  ;(printf "\nDIREITA:~a\n" tetra-pos-mov-direita)
   (define tetra-mov-direita (struct-copy tetramino tetra [pos tetra-pos-mov-direita]))
   (define jogo-novo (struct-copy tetris jogo [tetra tetra-mov-direita]))
+ ;  (printf "\nDIREITA:~a\n" (tetramino-pos (tetris-tetra jogo-novo)))
   (move-se-nao-colidiu jogo-novo jogo))
 
 ;; Jogo -> Jogo
@@ -152,10 +154,8 @@
   (define tetra (tetris-tetra jogo))
   (define altura (tetris-altura jogo))
   (define largura (tetris-largura jogo))
-  (not
-   (and
-    (lop-validas? (tetramino->lista-pos tetra) largura altura)
-    (lop-livres? (tetramino->lista-pos tetra) (tetris-campo jogo)))))
+  (not (and (lop-validas? (tetramino->lista-pos tetra) largura altura)
+            (lop-livres? (tetramino->lista-pos tetra) (tetris-campo jogo)))))
 
 ;; Jogo -> Jogo
 ;; Função que trata um tick. Esta função é chamada 28 vezes por segundo, ela
@@ -225,11 +225,10 @@
 (define (percorre-col tetra-rot-linha tetra-pos linha coluna)
   (cond
     [(empty? tetra-rot-linha) empty]
-    [else
-     (if (= (first tetra-rot-linha) 1)
-         (cons (posn (+ linha (posn-lin tetra-pos)) (+ coluna (posn-col tetra-pos)))
-               (percorre-col (rest tetra-rot-linha) tetra-pos linha (add1 coluna)))
-         (percorre-col (rest tetra-rot-linha) tetra-pos linha (add1 coluna)))]))
+    [ (= (first tetra-rot-linha) 1)
+      (cons (posn (+ linha (posn-lin tetra-pos)) (+ coluna (posn-col tetra-pos)))
+               (percorre-col (rest tetra-rot-linha) tetra-pos linha (add1 coluna)))]
+    [else (percorre-col (rest tetra-rot-linha) tetra-pos linha (add1 coluna))]))
 
 ;; Lista(Posn) Natural Natural -> Boolean
 ;; Devolve verdadeiro se todas as posições de lp são válidas, isto é, estão
@@ -239,11 +238,11 @@
   (cond
     [(empty? lp) #t]
     [else
-     (and
-      (and
-       (and (< (posn-lin (first lp)) altura) (>= (posn-lin (first lp)) 0))
-       (and (< (posn-col (first lp)) largura) (>= (posn-col (first lp)) 0)))
-      (lop-validas? (rest lp) largura altura))]))
+     (and (< (posn-lin (first lp)) altura) 
+          (>= (posn-lin (first lp)) 0)
+          (< (posn-col (first lp)) largura) 
+          (>= (posn-col (first lp)) 0)
+          (lop-validas? (rest lp) largura altura))]))
 
 ;; Lista(Posn) Campo -> Boolean
 ;; Devolve verdadeiro se todas as posição de lp estão livres no campo. Devolve
@@ -252,16 +251,15 @@
 (define (lop-livres? lp campo)
   (cond
     [(empty? lp) #t]
-    [else
-     (and
-      (= (list-ref (list-ref campo (posn-lin (first lp))) (posn-col (first lp))) 0)
-      (lop-livres? (rest lp) campo))]))
+    [else (and (= (list-ref (list-ref campo (posn-lin (first lp))) 
+                       (posn-col (first lp))) 0)
+               (lop-livres? (rest lp) campo))]))
 
 ;; Jogo -> Jogo
 ;; Preenche as posições ocupadas pelo tetraminó (que está caindo) no campo do
 ;; jogo.
 ;; Requer que tetraminó não possa ser movido para baixo.
-(define (fixa jogo) 
+(define (fixa jogo)
   (struct-copy tetris jogo [campo (fixa-tetramino (tetris-tetra jogo) (tetris-campo jogo))]))
 
 (define (fixa-tetramino tetramino campo) 
@@ -285,6 +283,7 @@
            (cons cor (laço (add1 i) (rest lst)))]
           [else 
            (cons (first lst) (laço (add1 i) (rest lst)))]))
+  
   (cond [(empty? cols) linha]
         [else (laço 0 linha)]))
 
