@@ -236,6 +236,12 @@
    (check-equal? (lop-livres? C1_OCUPADAS C1) #f)
    (check-equal? (lop-livres? (append C1_LIVRES (list (first C1_OCUPADAS))) C1) #f)))
 
+#;(define trata-tick-tests 
+  (test-suite
+   "trata-tick tests"
+   (check-equal? (trata-tick ))))
+
+
 (define fixa-tests
   (test-suite
    "fixa tests"
@@ -257,11 +263,11 @@
 (define contem-tests 
   (test-suite 
    "contem-tests"
-   (check-equal? (contem 1 (list 1 3 5 9)) #t)
-   (check-equal? (contem 9 (list 1 3 5 9)) #t)
-   (check-equal? (contem 5 (list 1 3 5 0 9)) #t)
-   (check-equal? (contem 1 (list)) #f)
-   (check-equal? (contem 2 (list 1 3 5 9)) #f)))
+   (check-equal? (contem? 1 (list 1 3 5 9)) #t)
+   (check-equal? (contem? 9 (list 1 3 5 9)) #t)
+   (check-equal? (contem? 5 (list 1 3 5 0 9)) #t)
+   (check-equal? (contem? 1 (list)) #f)
+   (check-equal? (contem? 2 (list 1 3 5 9)) #f)))
 
 (define get-cols-tests 
   (test-suite 

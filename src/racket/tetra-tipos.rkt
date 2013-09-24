@@ -102,7 +102,7 @@
              (1 1 0)
              (1 0 0)))
 
-(define I_TIPOS (list I1 I0))
+(define I_TIPOS (list I0 I1))
 (define J_TIPOS (list J0 J1 J2 J3))
 (define L_TIPOS (list L0 L1 L2 L3))
 (define O_TIPOS (list O0))
