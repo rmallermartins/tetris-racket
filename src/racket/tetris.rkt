@@ -111,26 +111,15 @@
   (colidiu-op jogo-novo jogo))
 
 ;; Jogo -> Jogo
-;; Está função é chamada se a tecla pressionada for "down".
-;; Move o tetraminó que está caindo para baixo, checa se não ouve colisão.
-;; Retornando o mesmo jogo caso tenha, e o novo jogo caso contrario.
-
-(define (move-baixo jogo)
-    (move jogo 
-          modifica-lin 
-          add1 
-          fixa-se-colidiu) )
-
-;; Jogo -> Jogo
 ;; Está função é chamada quando a tecla pressionada for "right".
 ;; Move o tetraminó que está caindo para a direita, checa se não ouve colisão.
 ;; Retornando o mesmo jogo caso tenha, e um novo jogo caso não tenha.
 
-  (define (move-direita jogo)
-    (move jogo 
-          modifica-col 
-          add1 
-          move-se-nao-colidiu) )
+(define (move-direita jogo)
+  (move jogo 
+        modifica-col 
+        add1 
+        move-se-nao-colidiu) )
 
 ;; Jogo -> Jogo
 ;; Está função é chamada quando a tecla pressionada for "left".
@@ -138,10 +127,21 @@
 ;; Retornando o mesmo jogo caso tenha, e um novo jogo caso não tenha.
 
 (define (move-esquerda jogo)
-    (move jogo 
-          modifica-col 
-          sub1 
-          move-se-nao-colidiu) )
+  (move jogo 
+        modifica-col 
+        sub1 
+        move-se-nao-colidiu) )
+
+;; Jogo -> Jogo
+;; Está função é chamada se a tecla pressionada for "down".
+;; Move o tetraminó que está caindo para baixo, checa se não ouve colisão.
+;; Retornando o mesmo jogo caso tenha, e o novo jogo caso contrario.
+
+(define (move-baixo jogo)
+  (move jogo 
+        modifica-lin 
+        add1 
+        fixa-se-colidiu) )
 
 ;; Jogo -> Jogo
 ;; Está função é chamada quando a tecla pressionada for "up".
@@ -153,14 +153,17 @@
   (define tetra-rot (tetramino-rot tetra))
   (define tetra-tipo (tetramino-tipo tetra))
   (define tipo-tam (length (tetramino-tipo tetra)))
+  
   (define (cria-novo-tetra nova-rot)
     (struct-copy tetramino tetra [rot nova-rot]))
+  
   (define (cria-novo-jogo novo-tetra)
     (struct-copy tetris jogo [tetra novo-tetra]))
-  (move-se-nao-colidiu (cond
-                         [(= tetra-rot (sub1 tipo-tam)) (cria-novo-jogo (cria-novo-tetra 0))]
-                         [else (cria-novo-jogo (cria-novo-tetra (add1 tetra-rot)))])
-                       jogo))
+  
+  (move-se-nao-colidiu 
+   (cond [(= tetra-rot (sub1 tipo-tam)) (cria-novo-jogo (cria-novo-tetra 0))]
+         [else (cria-novo-jogo (cria-novo-tetra (add1 tetra-rot)))])
+   jogo))
 
 ;; Jogo Jogo -> Jogo
 ;; Está função retorna o jogo com a peça fixada sem se mover caso no novo jogo 
@@ -200,9 +203,7 @@
   (define jogo-timeout-resetado-limpo (limpa (struct-copy tetris jogo [timeout TIMEOUT-PADRAO])))
   (cond [(game-over? jogo) (error "Game Over")]
         [(= timeout-jogo 0) (move-baixo jogo-timeout-resetado-limpo)]
-        [else (struct-copy tetris 
-                           jogo 
-                           [timeout (sub1 timeout-jogo)])]))
+        [else (struct-copy tetris jogo [timeout (sub1 timeout-jogo)])]))
 
 (define (game-over? jogo)
   (define lop-tetra (tetramino->lista-pos (tetris-tetra jogo)))
@@ -282,7 +283,7 @@
                       (* Q-ALTURA ALTURA-PADRAO) 
                       "solid" 
                       "black")))
-  
+
 ;; Tetramino -> Lista(Posn)
 ;; Devolve a lista de posições que t ocupa no campo considerando a rotação e a
 ;; posição (translação em relação a origem).
@@ -367,17 +368,13 @@
 (define (fixa jogo)
   (struct-copy tetris jogo [campo (fixa-tetramino (tetris-tetra jogo) (tetris-campo jogo))]))
 
+;; Tetramino Campo -> Campo
+;; Fixa o tretamino no campo e retorna esse novo campo
 (define (fixa-tetramino tetramino campo) 
-  
   (define posicoes (tetramino->lista-pos tetramino))
   (define cor (tetramino-cor tetramino))
-  
-  
-  (define (laço i lst)
-    (cond [(empty? lst) empty]
-          [else (cons (fixa-linha (get-cols posicoes i) cor (first lst) ) 
-                      (laço (add1 i) (rest lst)))]))
-  (laço 0 campo))
+  (build-list (length campo) 
+              (lambda (x) (fixa-linha (get-cols posicoes x) cor (list-ref campo x)))))
 
 ;; cols, nova-cor e linha -> linha
 ;; recebe a colunas a serem marcadas na linha pela cor indicada     
@@ -385,8 +382,8 @@
   (build-list 
    (length linha)            
    (lambda (x) 
-    (cond [(contem? x cols) nova-cor]
-          [else (list-ref linha x)]))))
+     (cond [(contem? x cols) nova-cor]
+           [else (list-ref linha x)]))))
 
 ;; elemento, lista -> boolean
 ;; verifica se o elemento esta na lista 
@@ -414,11 +411,13 @@
                                    (tetris-altura jogo)
                                    (tetris-largura jogo))]))
 
+;; campo altura largura -> campo
+;; tira todas as linha preenchidas e adiciona a quantia faltante
+;; retorna um novo campo e as linhas antes cheias, agora estão vazias
 (define (limpa-campo campo altura largura)
   (define campo-parcial (filter-not linha-completa? campo))
   (append (make-campo largura (- altura (length campo-parcial)) ) 
-          campo-parcial)
-)
+          campo-parcial))
 
 ;; Linha -> boolean
 ;; Verifica se a linha está completa (elementos diferentes de 0).
