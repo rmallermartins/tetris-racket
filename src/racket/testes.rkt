@@ -41,6 +41,36 @@
 (define TI0_POS (list (posn 0 1) (posn 0 2) (posn 0 3) (posn 0 4)))
 (define TI0_CENTRA_12 (tetramino I_TIPOS 0 (posn -1 4) I_COR))
 
+(define C3 (list (list 0 0 0 0 0 0 0)   ; 0
+                 (list 0 0 0 0 0 0 0)   ; 1
+                 (list 2 2 2 2 0 0 0)   ; 2
+                 (list 4 0 2 4 0 0 1)   ; 3
+                 (list 3 4 0 0 0 0 3)   ; 4
+                 (list 1 2 4 0 2 5 6))) ; 5
+                 ;     0 1 2 3 4 5 6
+
+(define C3_O34 (list (list 0 0 0 0 0 0 0)   ; 0
+                     (list 0 0 0 0 0 0 0)   ; 1
+                     (list 2 2 2 2 0 0 0)   ; 2
+                     (list 4 0 2 4 4 4 1)   ; 3
+                     (list 3 4 0 0 4 4 3)   ; 4
+                     (list 1 2 4 0 2 5 6))) ; 5
+                     ;     0 1 2 3 4 5 6
+
+(define O00 (tetramino O_TIPOS 0 (posn 0 0) O_COR))
+(define O14 (tetramino O_TIPOS 0 (posn 1 4) O_COR))
+(define O24 (tetramino O_TIPOS 0 (posn 2 4) O_COR))
+(define O34 (tetramino O_TIPOS 0 (posn 3 4) O_COR))
+(define O44 (tetramino O_TIPOS 0 (posn 4 4) O_COR))
+
+(define I03 (tetramino I_TIPOS 0 (posn 0 3) I_COR))
+(define I03_1 (tetramino I_TIPOS 1 (posn 0 3) I_COR))
+(define I13_1 (tetramino I_TIPOS 1 (posn 1 3) I_COR))
+(define T03 (tetramino T_TIPOS 0 (posn 0 3) T_COR))
+(define T03_1 (tetramino T_TIPOS 1 (posn 0 3) T_COR))
+(define T03_2 (tetramino T_TIPOS 2 (posn 0 3) T_COR))
+(define T03_3 (tetramino T_TIPOS 3 (posn 0 3) T_COR))
+
 (define C1 (list (list 0 0 0 0 0 0 0)   ; 0
                  (list 0 0 0 0 0 0 0)   ; 1
                  (list 6 0 0 0 0 0 0)   ; 2
@@ -92,6 +122,15 @@
                  (list 0 0 0 0 0)
                  (list 0 0 0 0 0)))
 
+(define C2_FULL (list 
+                 (list 0 0 5 0 0)
+                 (list 0 0 1 0 0)
+                 (list 0 0 1 0 0)
+                 (list 0 5 2 5 0)
+                 (list 0 0 3 0 0)
+                 (list 0 0 4 0 0)
+                 (list 0 0 5 0 0)))
+
 (define C2_LARGURA 5)
 (define C2_ALTURA 7)
 
@@ -127,6 +166,22 @@
                          (list TZ2 TI0)
                          TIMEOUT))))
 
+(define percorre-lin-tests
+  (test-suite
+   "percorre-lin tests"
+   (check-equal? (percorre-lin S3 (posn 2 2) 0 0)
+                (list (posn 2 2) (posn 3 2) (posn 3 3) (posn 4 3)))))
+
+(define percorre-col-tests
+  (test-suite
+   "percorre-lin tests"
+   (check-equal? (percorre-col (list-ref S3 0) (posn 2 2) 0 0)
+                (list (posn 2 2)))
+   (check-equal? (percorre-col (list-ref S3 1) (posn 2 2) 1 0)
+                (list (posn 3 2) (posn 3 3)))
+   (check-equal? (percorre-col (list-ref S3 2) (posn 2 2) 2 0)
+                (list (posn 4 3) ))))
+
 (define trata-tecla-tests
   (test-suite
    "trata-tecla tests"
@@ -142,6 +197,22 @@
                  (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_ESQUERDA empty TIMEOUT))
    (check-equal? (trata-tecla (tetris C1 C1_LARGURA C1_ALTURA TS0 empty TIMEOUT) "up")
                  (tetris C1 C1_LARGURA C1_ALTURA TS0_ROT empty TIMEOUT))))
+
+(define modifica-col-tests
+  (test-suite 
+   "modifica-col tests"
+   (check-equal? (modifica-col add1 (posn 1 0)) (posn 1 1))
+   (check-equal? (modifica-col add1 (posn 2 2)) (posn 2 3))
+   (check-equal? (modifica-col sub1 (posn 0 0)) (posn 0 -1))
+   (check-equal? (modifica-col sub1 (posn 4 5)) (posn 4 4))))
+
+(define modifica-lin-tests
+  (test-suite 
+   "modifica-lin tests"
+   (check-equal? (modifica-lin add1 (posn 1 0)) (posn 2 0))
+   (check-equal? (modifica-lin add1 (posn 2 2)) (posn 3 2))
+   (check-equal? (modifica-lin sub1 (posn 0 0)) (posn -1 0))
+   (check-equal? (modifica-lin sub1 (posn 4 5)) (posn 3 5))))
 
 (define move-direita-tests
   (test-suite
@@ -177,6 +248,60 @@
    (check-equal? (move-se-nao-colidiu (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_DIREITA empty TIMEOUT)
                                       (tetris C1 C1_LARGURA C1_ALTURA TO0 empty TIMEOUT))
                  (tetris C1 C1_LARGURA C1_ALTURA TO0_MOVE_DIREITA empty TIMEOUT))))
+
+(define fixa-se-colidiu-tests
+  (test-suite
+   "fixa-se-colidiu tests"
+   (check-equal? (fixa-se-colidiu (tetris C3 C1_LARGURA C1_ALTURA O24 empty 1) 
+                                  (tetris C3 C1_LARGURA C1_ALTURA O14 empty 1))
+                 (tetris C3 C1_LARGURA C1_ALTURA O24 empty 1))
+   
+   (check-equal? (tetris-campo (fixa-se-colidiu (tetris C3 C1_LARGURA C1_ALTURA O44 (stream-tetraminos) 1) 
+                                                (tetris C3 C1_LARGURA C1_ALTURA O34 (stream-tetraminos) 1)))
+                 C3_O34)))
+
+(define trata-tick-tests 
+  (test-suite
+   "trata-tick tests"
+
+   (check-equal? (trata-tick (tetris C3 C1_LARGURA C1_ALTURA O24 empty 2))
+                 (tetris C3 C1_LARGURA C1_ALTURA O24 empty 1))
+   (check-equal? (trata-tick (tetris C3 C1_LARGURA C1_ALTURA O24 empty 1))
+                 (tetris C3 C1_LARGURA C1_ALTURA O24 empty 0))
+   (check-equal? (trata-tick (tetris C3 C1_LARGURA C1_ALTURA O24 empty 0))
+                 (tetris C3 C1_LARGURA C1_ALTURA O34 empty TIMEOUT-PADRAO))
+   (check-equal? (tetris-campo (trata-tick (tetris C3 C1_LARGURA C1_ALTURA O34 (stream-tetraminos) 0)))
+                 C3_O34)
+   (check-equal? (tetris-timeout (trata-tick (tetris C3 C1_LARGURA C1_ALTURA O34 (stream-tetraminos) 0)))
+                 TIMEOUT-PADRAO)))
+
+(define game-over?-tests
+  (test-suite
+   "game-over? tests"
+   (check-equal? (game-over? (tetris C2_FULL C2_LARGURA C2_ALTURA (centraliza O00 C2_LARGURA) empty 2))
+                 #t)
+   (check-equal? (game-over? (tetris C3 C1_LARGURA C1_ALTURA O24 empty 2))
+                 #f)))
+
+(define rotaciona-tests
+  (test-suite
+   "rotaciona-tests"
+   (check-equal? (rotaciona (tetris C3 C1_LARGURA C1_ALTURA O24 empty 2))
+                 (tetris C3 C1_LARGURA C1_ALTURA O24 empty 2))
+   (check-equal? (rotaciona (tetris C3 C1_LARGURA C1_ALTURA I03 empty 2))
+                 (tetris C3 C1_LARGURA C1_ALTURA I03_1 empty 2))
+   (check-equal? (rotaciona (tetris C3 C1_LARGURA C1_ALTURA I03_1 empty 2))
+                 (tetris C3 C1_LARGURA C1_ALTURA I03 empty 2))
+   (check-equal? (rotaciona (tetris C3 C1_LARGURA C1_ALTURA I13_1 empty 2))
+                 (tetris C3 C1_LARGURA C1_ALTURA I13_1 empty 2))
+   (check-equal? (rotaciona (tetris C3 C1_LARGURA C1_ALTURA T03 empty 2))
+                 (tetris C3 C1_LARGURA C1_ALTURA T03_1 empty 2))
+   (check-equal? (rotaciona (tetris C3 C1_LARGURA C1_ALTURA T03_1 empty 2))
+                 (tetris C3 C1_LARGURA C1_ALTURA T03_2 empty 2))
+   (check-equal? (rotaciona (tetris C3 C1_LARGURA C1_ALTURA T03_2 empty 2))
+                 (tetris C3 C1_LARGURA C1_ALTURA T03_3 empty 2))
+   (check-equal? (rotaciona (tetris C3 C1_LARGURA C1_ALTURA T03_3 empty 2))
+                 (tetris C3 C1_LARGURA C1_ALTURA T03 empty 2))))
 
 (define colidiu?-tests
   (test-suite
@@ -235,11 +360,6 @@
    (check-equal? (lop-livres? C1_LIVRES C1) #t)
    (check-equal? (lop-livres? C1_OCUPADAS C1) #f)
    (check-equal? (lop-livres? (append C1_LIVRES (list (first C1_OCUPADAS))) C1) #f)))
-
-#;(define trata-tick-tests 
-  (test-suite
-   "trata-tick tests"
-   (check-equal? (trata-tick ))))
 
 
 (define fixa-tests
@@ -310,10 +430,18 @@
                  centraliza-tests
                  make-tetris-tests
                  trata-tecla-tests
+                 percorre-lin-tests
+                 percorre-col-tests
+                 trata-tick-tests
+                 rotaciona-tests
+                 game-over?-tests
+                 modifica-col-tests
+                 modifica-lin-tests
                  move-direita-tests
                  move-esquerda-tests
                  move-baixo-tests
                  move-se-nao-colidiu-tests
+                 fixa-se-colidiu-tests
                  colidiu?-tests
                  tetramino->pos-tests
                  lop-validas?-tests

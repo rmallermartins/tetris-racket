@@ -30,6 +30,10 @@
          limpa
          linha-completa?
          trata-tecla
+         percorre-lin
+         percorre-col
+         modifica-col
+         modifica-lin
          move-direita
          move-esquerda
          rotaciona
@@ -201,10 +205,13 @@
   (printf "t")
   (define timeout-jogo (tetris-timeout jogo))
   (define jogo-timeout-resetado-limpo (limpa (struct-copy tetris jogo [timeout TIMEOUT-PADRAO])))
-  (cond [(game-over? jogo) (error "Game Over")]
+  (cond [(game-over? jogo-timeout-resetado-limpo) (error "Game Over")]
         [(= timeout-jogo 0) (move-baixo jogo-timeout-resetado-limpo)]
         [else (struct-copy tetris jogo [timeout (sub1 timeout-jogo)])]))
 
+;; Jogo -> Jogo
+;; Função que verifica se o jogo chegou ao fim, se o limite superior foi ultrapassado
+;; Retorna verdade caso o jogo colida, falso caso contrario
 (define (game-over? jogo)
   (define lop-tetra (tetramino->lista-pos (tetris-tetra jogo)))
   (cond
@@ -269,7 +276,7 @@
                   (desenha-linha (rest linha)))]))
 
 ;; Integer -> Imagem
-;; Está função é chamda dentro da função desenha-linha, ela devolve a imagem
+;; Está função é chamada dentro da função desenha-linha, ela devolve a imagem
 ;; correspondente a um bloco da linha.
 (define (desenha-bloco bloco)
   (define desenho-bloco (rectangle Q-LARGURA Q-ALTURA "solid" (list-ref CORES bloco)))
@@ -328,13 +335,22 @@
 
 ;; Tetramino-rot Tetramino-pos Int Int -> Posn
 ;; Percorre as colunas da linha da rotação do tetra e cria um Posn caso ache 1
+
 (define (percorre-col tetra-rot-linha tetra-pos linha coluna)
   (cond
     [(empty? tetra-rot-linha) empty]
     [ (= (first tetra-rot-linha) 1)
-      (cons (posn (+ linha (posn-lin tetra-pos)) (+ coluna (posn-col tetra-pos)))
-            (percorre-col (rest tetra-rot-linha) tetra-pos linha (add1 coluna)))]
-    [else (percorre-col (rest tetra-rot-linha) tetra-pos linha (add1 coluna))]))
+      (cons (posn (+ linha 
+                     (posn-lin tetra-pos)) 
+                  (+ coluna 
+                     (posn-col tetra-pos)))
+            (percorre-col (rest tetra-rot-linha) 
+                          tetra-pos linha 
+                          (add1 coluna)))]
+    [else (percorre-col (rest tetra-rot-linha) 
+                        tetra-pos 
+                        linha 
+                        (add1 coluna))]))
 
 ;; Lista(Posn) Natural Natural -> Boolean
 ;; Devolve verdadeiro se todas as posições de lp são válidas, isto é, estão
